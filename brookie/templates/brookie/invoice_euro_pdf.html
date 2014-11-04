@@ -1,4 +1,5 @@
 {% load monetize %}
+{% load cycle from future %}
 <html>
 <style>
 @page {
@@ -12,7 +13,7 @@
         bottom: 0cm;
         margin-left: 1cm;
         margin-right: 1cm;
-        height: 2cm; 
+        height: 2cm;
     }
     @frame simple {
         -pdf-frame-content: simple;
@@ -150,7 +151,7 @@ div#simple table{
                 <td width="60%">&nbsp;</td>
                 <td width="20%">Total {{ invoice.tax.percentage }}% {{ invoice.tax.abbrevation }}</td>
                 <td width="20%" class="amount" style="border-bottom: 1px solid #333;">&euro; {{ invoice.total_tax|euro }}</td>
-            </tr> 
+            </tr>
             <tr>
                 <td width="60%">&nbsp;</td>
                 <td width="20%" class="total"><strong>Total</strong></td>
@@ -161,9 +162,9 @@ div#simple table{
     <div id="simple">
         <table>
             <tr>
-                <td width="33%" style="padding-top: 5px;">IBAN</th>
-                <td width="34%" style="padding-top: 5px;">Invoice ID</th>
-                <td width="33%" style="padding-top: 5px;">Amount EURO</th>
+                <td width="33%" style="padding-top: 5px;">IBAN</td>
+                <td width="34%" style="padding-top: 5px;">Invoice ID</td>
+                <td width="33%" style="padding-top: 5px;">Amount EURO</td>
             </tr>
             <tr>
                 <td><strong>NL28INGB0004954664</strong></td>

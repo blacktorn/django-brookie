@@ -1,6 +1,6 @@
 $(document).ready(function() {
     update_total();
-    
+
     // Capture ``insert-all`` and apply function below.
     $('#part-insert-all').click(function(event){
         event.preventDefault();
@@ -22,7 +22,7 @@ $(document).ready(function() {
             update_total();
         });
     });
-    
+
     // Update the item amount when the hourly rate changes.
     $('#id_hourly_rate').keyup(function(){
         $('.time').each(function(){
@@ -55,13 +55,13 @@ $(document).ready(function() {
 // Update the subtotal.
 function update_total(){
     var total = 0;
-    $('.amount').each(function(){
+    $('.field-amount').each(function(){
         var amount = $(this).children(":first").attr("id");
         total_amount = parseFloat($('#'+amount).val());
         if(!isNaN(total_amount)){
             total += total_amount;
         }
-    });  
+    });
     $('#totals_subtotal').val(total.toFixed(2));
 };
 

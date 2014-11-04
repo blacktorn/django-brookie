@@ -5,6 +5,8 @@
 _build
 build
 .Python
+*.pyc
+*.iml
 
 # Virtual environment
 bin/

@@ -1,5 +1,6 @@
 from brookie.templatetags.monetize import euro, pound, sek
 
+
 def decimal_to_string(value, currency):
     """ Convert value to currency string """
     if currency == 'euro':

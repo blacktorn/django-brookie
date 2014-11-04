@@ -8,6 +8,7 @@ from brookie import brookie_settings as settings
 from decimal import *
 from datetime import datetime, timedelta
 
+
 class Client(models.Model):
     """ Model representing a client """
     company = models.CharField(_('company'), max_length=80)
@@ -32,6 +33,7 @@ class Client(models.Model):
 
     def __unicode__(self):
         return '%s' % self.company
+
 
 class Invoice(models.Model):
     """ Model representing an invoice """
@@ -68,36 +70,44 @@ class Invoice(models.Model):
     def subtotal(self):
         """ Subtotal, the amount excluding the taxes """
         subtotal = Decimal(0)
-        for item in self.items.all(): subtotal += item.amount
+        for item in self.items.all():
+            subtotal += item.amount
         return subtotal
 
     @property
     def total_tax(self):
         """ Total of tax payed """
-        if self.tax: total_tax = (self.subtotal * (self.tax.percentage)) / 100
-        else: total_tax = Decimal(0)
+        if self.tax:
+            total_tax = (self.subtotal * self.tax.percentage) / 100
+        else:
+            total_tax = Decimal(0)
         return total_tax.quantize(Decimal('0.01'), ROUND_HALF_UP)
 
     @property
     def invoice_id(self):
         """ Unique invoice ID """
-        number = (settings.INVOICE_ID_LENGTH - len(str(self.invoice_no))) * "0" + str(self.invoice_no)
-        return '%(prefix)s%(year)s%(unique_id)s' % {'prefix': settings.INVOICE_ID_PREFIX,
-                                                    'year': self.date.strftime("%y"),
-                                                    'unique_id': number}
+        number = str(self.invoice_no).rjust(settings.INVOICE_ID_LENGTH, '0')
+        return settings.INVOICE_ID_FORMAT.format(
+            prefix=settings.INVOICE_ID_PREFIX,
+            month=self.date.strftime("%m"),
+            year=self.date.strftime("%y"),
+            unique_id=number
+        )
 
     @property
     def is_credit(self):
         """ Check if the invoice is a credit invoice """
         if self.total < 0:
             return True
-        else: return False
+        else:
+            return False
 
     @property
     def exp_date(self):
         """ Expiration date of the invoice """
         expiration_time = timedelta(days=settings.INVOICE_EXPIRATION_DAYS)
-        return (self.date + expiration_time)
+        return self.date + expiration_time
+
 
 class Tax(models.Model):
     """ Model representing different taxes to be used in Invoices"""
@@ -114,6 +124,7 @@ class Tax(models.Model):
     def __unicode__(self):
         return '%s' % self.name
 
+
 class QuotePart(models.Model):
     """ A default part that can be inserted in a quote """
     name = models.CharField(_('name'), max_length=255)
@@ -124,6 +135,7 @@ class QuotePart(models.Model):
 
     def __unicode__(self):
         return '%s' % self.name
+
 
 class Quote(models.Model):
     """ Model representing a quote """
@@ -164,6 +176,7 @@ class Quote(models.Model):
         """ Expiration date of the quote """
         expiration_time = timedelta(days=31)
         return (self.date + expiration_time)
+
 
 class Item(models.Model):
     """ Items of which a Quote or an Invoice exists. """

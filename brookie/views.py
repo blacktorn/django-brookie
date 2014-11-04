@@ -1,21 +1,24 @@
+import cStringIO as StringIO
+import cgi
+import os
+import datetime
+
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import user_passes_test
-from django.template.loader import get_template
-from django.template import Context
+from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.core.urlresolvers import reverse
-
-import ho.pisa as pisa
-import cStringIO as StringIO
-import cgi, os, datetime
+from xhtml2pdf import pisa
 
 from brookie.models import Invoice, Quote, Item
 from brookie import brookie_settings as br_settings
 
+
 def user_is_staff(user):
     """ Check if a user has the staff status """
     return user.is_authenticated() and user.is_staff
+
 
 def fetch_resources(uri, rel):
     """
@@ -24,17 +27,13 @@ def fetch_resources(uri, rel):
     `rel` gives a relative path, but it's not used here.
 
     """
-    if 'django.contrib.staticfiles' in settings.INSTALLED_APPS:
-        path = os.path.join(settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
-    else:
-        path = os.path.join(settings.MEDIA_ROOT, uri.replace(settings.MEDIA_URL, ""))
-    return path
+    return os.path.join(
+        settings.STATIC_ROOT, uri.replace(settings.STATIC_URL, ""))
+
 
 def generate_pdf(filename, context_dict, template, save=False):
     """ Generates a invoice PDF in desired language """
-    template = get_template(template)
-    context = Context(context_dict)
-    html  = template.render(context)
+    html = render_to_string(template, context_dict)
     # Insert page skips
     html = html.replace('-pageskip-', '<pdf:nextpage />')
     result = StringIO.StringIO()
@@ -42,60 +41,65 @@ def generate_pdf(filename, context_dict, template, save=False):
         html.encode("UTF-8")), result, link_callback=fetch_resources)
     if not pdf.err:
         if not save:
-            response = HttpResponse(result.getvalue(), mimetype='application/pdf')
-            response['Content-Disposition'] = 'attachment; filename=%s.pdf' % filename
+            response = HttpResponse(result.getvalue(), content_type='application/pdf')
+            # response['Content-Disposition'] = 'attachment; filename=%s.pdf' % filename
             return response
         else:
             f = open(br_settings.BROOKIE_SAVE_PATH + '%s.pdf' % filename, 'w')
             f.write(result.getvalue())
             f.close()
             return True
-            
-    return http.HttpResponse('There was an error creating your PDF: %s' % cgi.escape(html))
+
+    return HttpResponse('There was an error creating your PDF: %s' % cgi.escape(html))
+
 
 @user_passes_test(user_is_staff)
-def generate_invoice(request, id):
+def generate_invoice(request, pk):
     """ Compile dictionary and generate pdf for invoice """
-    invoice = get_object_or_404(Invoice, pk=id)
+    invoice = get_object_or_404(Invoice, pk=pk)
 
     context_dict = {'invoice': invoice,
                     'client': invoice.client,
                     'items': invoice.items.all(),}
-    
+
     return generate_pdf(invoice.invoice_id, context_dict, "brookie/invoice_%s_pdf.html" % invoice.currency)
 
+
 @user_passes_test(user_is_staff)
-def view_invoice(request, id):
+def view_invoice(request, pk):
     """ Return the invoice """
-    invoice = get_object_or_404(Invoice, pk=id)
+    invoice = get_object_or_404(Invoice, pk=pk)
     file_path = br_settings.BROOKIE_SAVE_PATH + '%s.pdf' % invoice.invoice_id
-    
+
     if os.path.exists(file_path):
         f = open(file_path)
 
-        response = HttpResponse(f.read(), mimetype='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename=%s.pdf' % invoice.invoice_id
+        response = HttpResponse(f.read(), content_type='application/pdf')
+        # response['Content-Disposition'] = 'attachment; filename=%s.pdf' % invoice.invoice_id
         return response
-    else: raise Http404
-    
+    else:
+        raise Http404
+
+
 @user_passes_test(user_is_staff)
-def generate_quote(request, id):
+def generate_quote(request, pk):
     """ Generate dictionary and generate pdf for quote """
-    quote = get_object_or_404(Quote, pk=id)
+    quote = get_object_or_404(Quote, pk=pk)
 
     # Replace values in the quote
     quote.content = quote.content.replace('-company-', quote.client.company)
-    
+
     context_dict = {'quote': quote,
                     'client': quote.client,
                     'items': quote.items.all(),}
 
     return generate_pdf(quote.quote_id, context_dict, "brookie/quote_pdf.html")
 
+
 @user_passes_test(user_is_staff)
-def quote_to_invoice(request, id):
+def quote_to_invoice(request, pk):
     """ Copy a Quote to an Invoice and redirects """
-    q = get_object_or_404(Quote, pk=id)
+    q = get_object_or_404(Quote, pk=pk)
     i = Invoice(client=q.client,
                 date=datetime.datetime.now(),
                 currency='euro',
@@ -105,8 +109,8 @@ def quote_to_invoice(request, id):
     for item in q.items.all():
         new_item = Item(date=datetime.datetime.now(),
                         description=item.description,
-                        time = item.time,
-                        amount = item.amount,
+                        time=item.time,
+                        amount=item.amount,
                         object=i)
         new_item.save()
-    return HttpResponseRedirect(reverse('admin:brookie_invoice_change', args=[i.id,]))
+    return HttpResponseRedirect(reverse('admin:brookie_invoice_change', args=[i.pk]))
