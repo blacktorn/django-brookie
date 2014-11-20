@@ -207,7 +207,7 @@ class InvoiceAdmin(admin.ModelAdmin):
                 try:
                     invoice = invoice_list[0]
                     invoice_no = invoice.invoice_no + 1
-                except Invoice.DoesNotExist:
+                except (IndexError, Invoice.DoesNotExist):
                     # There are no numbered invoices
                     invoice_no = getattr(br_settings, 'INVOICE_START_NUMBER', 1)
                 obj.invoice_no = invoice_no
