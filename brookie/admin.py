@@ -113,7 +113,7 @@ class QuoteAdmin(admin.ModelAdmin):
     inlines = [QuoteItemInline, ]
 
     class Media:
-        js = ('http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js',
+        js = ('//ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js',
               'brookie/js/brookie.js')
 
 
@@ -137,7 +137,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     inlines = [ItemInline]
 
     class Media:
-        js = ('http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js',
+        js = ('//ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js',
               'brookie/js/brookie.js')
 
     def get_readonly_fields(self, request, obj=None):
