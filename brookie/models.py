@@ -1,9 +1,9 @@
 from django.db import models
 from django.utils.translation import ugettext as _
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 
-from brookie import brookie_settings as settings
+from . import brookie_settings as settings
 
 from decimal import *
 from datetime import datetime, timedelta
@@ -48,7 +48,7 @@ class Invoice(models.Model):
                                       max_digits=6,
                                       decimal_places=2,
                                       default=settings.INVOICE_HOURLY_RATE)
-    items = generic.GenericRelation('Item')
+    items = GenericRelation('Item')
     invoice_no = models.PositiveIntegerField(_('invoice_no'),
                                              blank=True,
                                              null=True)
@@ -143,7 +143,7 @@ class Quote(models.Model):
     date = models.DateField(_('date'))
     status = models.SmallIntegerField(_('status'), choices=settings.QUOTE_STATUS_CHOICES)
     content = models.TextField(_('content'))
-    items = generic.GenericRelation('Item')
+    items = GenericRelation('Item')
     hourly_rate = models.DecimalField(_('hourly rate'),
                                       max_digits=6,
                                       decimal_places=2,
@@ -187,7 +187,7 @@ class Item(models.Model):
 
     content_type = models.ForeignKey(ContentType, verbose_name=_('content type'))
     object_id = models.PositiveIntegerField(_('object id'), db_index=True)
-    object = generic.GenericForeignKey('content_type', 'object_id')
+    object = GenericForeignKey('content_type', 'object_id')
 
     class Meta:
         verbose_name = _('item')

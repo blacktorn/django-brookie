@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.contrib import admin
 from django.conf import settings
 from django.utils.translation import ugettext as _
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.admin import GenericTabularInline
 from django.core.urlresolvers import reverse
 
 from brookie.models import Client, Invoice, Tax, Quote, Item, QuotePart
@@ -19,16 +19,16 @@ def is_expired(self):
     """ Check if an invoice is expired """
     now = datetime.now().date()
     extra = ""
-    image = 'admin/img/icon_success.gif'
+    image = 'admin/img/icon-yes.svg'
     days_left = (self.exp_date - now).days
     if self.status == 1:
-        image = 'admin/img/icon_changelink.gif'
+        image = 'admin/img/icon-changelink.svg'
     elif self.status in (2, 3):
         if days_left <= 0:
-            image = 'admin/img/icon_error.gif'
+            image = 'admin/img/icon-no.svg'
             extra = _(' <strong>(%s days late.)</strong>' % (days_left * -1))
         else:
-            image = 'admin/img/icon_clock.gif'
+            image = 'admin/img/icon-clock.svg'
             extra = _(" (%s days left.)" % days_left)
     return '<img src="%(admin_media)s%(image)s" />%(extra)s' % {
         'admin_media': settings.STATIC_URL, 'image': image,
@@ -64,7 +64,7 @@ pdf_invoice.short_description = _("Download")
 pdf_invoice.allow_tags = True
 
 
-class ItemInline(generic.GenericTabularInline):
+class ItemInline(GenericTabularInline):
     model = Item
 
     def get_formset(self, request, obj=None, **kwargs):
@@ -82,7 +82,7 @@ class ItemInline(generic.GenericTabularInline):
         return readonly
 
 
-class QuoteItemInline(generic.GenericTabularInline):
+class QuoteItemInline(GenericTabularInline):
     model = Item
     fields = ('description', 'time', 'amount',)
 
